@@ -13,22 +13,22 @@ var EntitiesFuse = new Fuse(ENTITIES, {
 // --- Message handling (single listener) ---
 chrome.runtime.onMessage.addListener(function (request, sender, respond) {
     if (request.id === "get_coloncode_emoji") {
-        var emoji = null;
-        for (var i = 0; i < ENTITIES.length; i++) {
+        let emoji = null;
+        for (let i = 0; i < ENTITIES.length; i++) {
             if (ENTITIES[i][1] === request.coloncode) {
                 emoji = ENTITIES[i][0];
                 break;
             }
         }
         respond(emoji);
-        return true; // keep channel open if needed (sync response here)
+        return true;
     }
 
     if (request.id === "get_coloncodes") {
-        var result = EntitiesFuse.search(request.search);
-        // Normalize fuse v3+ result shape: [{item}, ...] -> raw items for callers
-        var items = (result && result[0] && result[0].item)
-            ? result.map(function (r) { return r.item; })
+        const result = EntitiesFuse.search(request.search);
+        // Normalize fuse v3+ result shape
+        const items = (result && result[0] && result[0].item)
+            ? result.map(r => r.item)
             : result;
         respond(items);
         return true;

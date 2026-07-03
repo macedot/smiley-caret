@@ -25,13 +25,12 @@ ElementWatcher.element.on('keydown', StringBuffer.handleKeyDown);
 ElementWatcher.element.on('keypress', function (event) {
     StringBuffer.handleKeyPress(event);
 
-    setTimeout(function () {
-        // Timeout needed because otherwise the positioning happens before
-        // the character is inserted.
+    // Use rAF for better timing of DOM read (caret position) after char insertion
+    requestAnimationFrame(function () {
         UI.dropdownAction(function (dropdown) {
             dropdown.alignTo(event.target);
         });
-    }, 0);
+    });
 });
 
 ElementWatcher.element.on('keyup', function (event, element) {

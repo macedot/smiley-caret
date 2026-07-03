@@ -37,10 +37,9 @@ function Dropdown(parent) {
         nameElem.appendChild(document.createTextNode(name));
         item.appendChild(nameElem);
 
-        item.smileyCaret = {
-            emoji: emoji,
-            name: name
-        };
+        // Use dataset instead of expando property (cleaner, modern DOM practice)
+        item.dataset.smileyEmoji = emoji;
+        item.dataset.smileyName = name;
 
         var self = this;
         item.addEventListener("mouseenter", function () {
@@ -59,12 +58,8 @@ function Dropdown(parent) {
     },
 
     chooseItem: function () {
-        if (
-            this.selectedItem &&
-            this.selectedItem.smileyCaret &&
-            this.selectedItem.smileyCaret.emoji
-        ) {
-            this.emit('choose', this.selectedItem.smileyCaret.emoji);
+        if (this.selectedItem && this.selectedItem.dataset.smileyEmoji) {
+            this.emit('choose', this.selectedItem.dataset.smileyEmoji);
         }  
     },
 

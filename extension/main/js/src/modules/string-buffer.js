@@ -33,8 +33,12 @@ module.exports = (function () {
     };
 
     exports.handleKeyPress = function (event) {
+        // Skip IME composition to avoid breaking non-Latin input methods
+        if (event.isComposing) return;
+
         change(function (buffer) {
-            if (event.which !== Keys.codes.space) {
+            // Use event.key for the character; ignore space here (handled in keydown)
+            if (event.key !== ' ') {
                 return buffer + event.key;
             } else {
                 return buffer;
@@ -43,22 +47,24 @@ module.exports = (function () {
     };
 
     exports.handleKeyDown = function (event) {
-        if (
-            event.which === Keys.codes.enter ||
-            event.which === Keys.codes.space
-        ) {
+        if (event.isComposing) return;
+
+        const key = event.key;
+        const which = event.which; // fallback for very old browsers
+
+        if (key === 'Enter' || key === ' ' || which === Keys.codes.enter || which === Keys.codes.space) {
             exports.emit('break', _buffer);
             exports.clear();
             return;
         }
 
-        //                              selection is not a single character (ctrl+A)
-        if (Keys.isArrowKey(event.which) || !(window.getSelection().isCollapsed)) {
+        // Clear on arrow keys or when selection is not collapsed (e.g. ctrl+A)
+        if (Keys.isArrowKey(which) || key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || !(window.getSelection().isCollapsed)) {
             exports.clear();
             return;
         }
 
-        if (event.which === Keys.codes.backspace) {
+        if (key === 'Backspace' || which === Keys.codes.backspace) {
             change(function (buffer) {
                 return buffer.slice(0, -1);
             });

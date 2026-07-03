@@ -11,7 +11,12 @@
     "128": "img/icon-128.png"
   },
 
-  "action": {},
+  "action": {
+    "default_title": "Toggle Smiley Caret (text → emoji)",
+    "default_icon": {
+      "16": "img/icon-16.png"
+    }
+  },
 
   "permissions": [
     "storage"
