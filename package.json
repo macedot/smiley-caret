@@ -7,6 +7,7 @@
     "build": "npm run build:extension && npm run build:options",
     "build:extension": "esbuild extension/main/js/src/content.js --bundle --format=iife --minify --sourcemap --outfile=extension/main/js/content.js --platform=browser && esbuild extension/main/js/src/event.js --bundle --format=iife --minify --sourcemap --outfile=extension/main/js/event.js --platform=browser",
     "build:options": "esbuild extension/options/js/src/main.js --bundle --format=iife --minify --sourcemap --outfile=extension/options/js/main.js --platform=browser",
+    "package": "node scripts/package.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Hristiyan Dodov",

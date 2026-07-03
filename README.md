@@ -4,7 +4,8 @@ Chrome Extension for turning emoticons :) into emoji 🙂
 ## Development
 
 - `npm install`
-- `npm run build` (uses esbuild)
+- `npm run build` — build the extension bundles
+- `npm run package` — build + create a ready-to-upload zip (`smiley-caret-vX.Y.Z.zip`)
 - Load `extension/` as unpacked extension in `chrome://extensions`
 
 Manifest V3 migration completed (2026). See plan for details.
