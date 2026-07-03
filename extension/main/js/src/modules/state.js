@@ -29,8 +29,19 @@ module.exports = (function () {
     return exports;
 })();
 
-// Turn off replacing functionality because facebook is a pain in the ass.
-if (window.location.hostname.indexOf('facebook') !== -1) {
+// Turn off replacing functionality on Facebook/Messenger DOM, which fights
+// the extension. Match hostnames precisely (not bare substring) so unrelated
+// sites containing "facebook" aren't affected.
+function isFacebookHost(hostname) {
+    return (
+        hostname === 'facebook.com' ||
+        hostname.endsWith('.facebook.com') ||
+        hostname === 'messenger.com' ||
+        hostname.endsWith('.messenger.com')
+    );
+}
+
+if (isFacebookHost(window.location.hostname)) {
     module.exports.setBehavior({
         copy: true,
         shortcodes: false

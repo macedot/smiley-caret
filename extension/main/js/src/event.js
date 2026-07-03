@@ -11,6 +11,10 @@ var EntitiesFuse = new Fuse(ENTITIES, {
 });
 
 // --- Message handling (single listener) ---
+// Note: relies on MV3's default no-externally_connectable policy; only this
+// extension's own content scripts can reach these handlers. Both handlers are
+// synchronous, so we return nothing (falsy) to avoid keeping the message
+// channel open expecting an async response.
 chrome.runtime.onMessage.addListener(function (request, sender, respond) {
     if (request.id === "get_coloncode_emoji") {
         let emoji = null;
@@ -21,7 +25,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, respond) {
             }
         }
         respond(emoji);
-        return true;
+        return;
     }
 
     if (request.id === "get_coloncodes") {
@@ -31,7 +35,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, respond) {
             ? result.map(r => r.item)
             : result;
         respond(items);
-        return true;
+        return;
     }
 });
 

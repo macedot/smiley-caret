@@ -19,6 +19,12 @@ module.exports = function (emoji) {
         }
 
         Utils.searchSelection(search, function (result) {
+            // Backstop: the buffer is the source of truth, but if it ever desyncs
+            // from the DOM (split nodes, normalize races, etc.), don't clobber
+            // unrelated text. Bail silently instead.
+            var slice = result.node.nodeValue.substring(result.start, result.end);
+            if (slice !== search) return;
+
             // Create a fresh range on the known node/indices for reliability,
             // especially at start of line/node (startIndex==0) or complex ce structures.
             var range = document.createRange();
@@ -29,14 +35,16 @@ module.exports = function (emoji) {
             // Otherwise replace with the emoji.
             if (!copyBehavior) {
                 range.deleteContents();
-                range.insertNode(document.createTextNode(emoji));
+                var inserted = document.createTextNode(emoji);
+                range.insertNode(inserted);
 
                 if (result.node.parentNode) {
                     result.node.parentNode.normalize();
                 }
 
-                // Place caret after the inserted emoji
-                range.setStartAfter(range.endContainer);
+                // Place caret after the inserted emoji. Use the inserted node reference
+                // rather than range.endContainer, which is UA-dependent after insertNode.
+                range.setStartAfter(inserted);
                 range.collapse(true);
                 result.selection.removeAllRanges();
                 result.selection.addRange(range);
@@ -50,8 +58,13 @@ module.exports = function (emoji) {
                 element.selectionStart = result.start;
                 element.selectionEnd = result.end;
             } else {
+                // Backstop: bail if the buffer desyncs from the field value.
+                if (element.value.substring(result.start, result.end) !== search) return;
+
                 element.value = result.before + emoji + result.after;
-                element.selectionEnd = result.before.length + emoji.length;
+                var caret = result.before.length + emoji.length;
+                element.selectionStart = caret;
+                element.selectionEnd = caret;
             }
         });
     }

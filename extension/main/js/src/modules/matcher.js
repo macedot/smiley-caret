@@ -89,6 +89,7 @@ module.exports = (function () {
             for (var i = 0; i < _coloncodes.length; i++) {
                 if (_coloncodes[i][1] === _flags.coloncode) {
                     exports.emit('match', _coloncodes[i][0]);
+                    break; // first match wins; avoid double-replace on slug collisions
                 }
             }
         }   

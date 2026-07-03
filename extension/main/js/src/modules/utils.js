@@ -118,11 +118,16 @@ module.exports = {
             var node = document.createElement('span');
             clonedRange.insertNode(node);
 
-            offset = this.getElementBodyOffset(node);
-
-            var parent = node.parentNode;
-            parent.removeChild(node);
-            parent.normalize();
+            try {
+                offset = this.getElementBodyOffset(node);
+            } finally {
+                // Always clean up the temp node, even if measurement throws.
+                var parent = node.parentNode;
+                if (parent) {
+                    parent.removeChild(node);
+                    parent.normalize();
+                }
+            }
         } else {
             offset = this.getElementBodyOffset(elem);
 

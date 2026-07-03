@@ -78,34 +78,30 @@ function Dropdown(parent) {
     updateList: function (list) {
         if (list.length === 0) return;
 
+        // Clean rebuild: drop every existing item, then recreate from the new
+        // list. Simpler and obviously-correct vs. an incremental diff; list
+        // sizes here are small (fuzzy search top-N).
+        var selectedName = this.selectedItem ? this.selectedItem.dataset.smileyName : null;
+
         for (var k in this.items) {
-            this.items[k].parentNode.removeChild(this.items[k]);
-
-            var exists = false;
-            for (var i = 0; i < list.length; i++) {
-                if (list[i][1] === k) {
-                    exists = true;
-                    break;
-                }
-            }
-
-            if (!exists) {
-                delete this.items[k];
-            }
+            var node = this.items[k];
+            if (node.parentNode) node.parentNode.removeChild(node);
+            delete this.items[k];
         }
 
         for (var i = 0; i < list.length; i++) {
             var emoji = list[i][0]
             ,   name = list[i][1];
 
-            if (this.items[name]) {
-                this.container.appendChild(this.items[name]);
-            } else {
-                this.createItem(name, emoji);
+            this.createItem(name, emoji);
+
+            if (name === selectedName) {
+                this.selectItem(this.items[name]);
             }
         }
 
-        if (this.container.firstElementChild) {
+        // If the previously-selected name is gone, fall back to the first item.
+        if (!this.selectedItem && this.container.firstElementChild) {
             this.selectItem(this.container.firstElementChild);
         }
     },
