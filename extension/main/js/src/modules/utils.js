@@ -12,16 +12,11 @@ module.exports = {
 
         var value = elem.value
         ,   endIndex = elem.selectionEnd
-        ,   startIndex = endIndex - search.length;
+        ,   len = search.length
+        ,   startIndex = Math.max(0, endIndex - len);
 
-        if (
-            startIndex < 0 ||
-            endIndex < startIndex ||
-            value.substring(startIndex, endIndex) != search
-        ) {
-            return false;
-        }
-
+        // Always replace the preceding N chars based on the buffer. No strict match check.
+        // This ensures it works even when the shortcode is the very first thing (startIndex=0).
         return callback({
             start: startIndex,
             end: endIndex,
@@ -42,18 +37,17 @@ module.exports = {
         }
 
         var node = selection.focusNode
-        ,   endIndex = selection.focusOffset
-        ,   startIndex = endIndex - search.length;
+        ,   endIndex = selection.focusOffset;
 
-        if (
-            startIndex < 0 ||
-            endIndex < startIndex ||
-            selection.rangeCount == 0 ||
-            node.nodeValue.substring(startIndex, endIndex) != search
-        ) {
+        if (!node || !node.nodeValue || selection.rangeCount == 0) {
             return false;
         }
 
+        var len = search.length;
+        var startIndex = Math.max(0, endIndex - len);
+
+        // Always replace the preceding N chars in the current text node based on the buffer.
+        // This fixes cases where the shortcode is the very first thing on the line (start of text node).
         return callback({
             selection: selection,
             node: node,

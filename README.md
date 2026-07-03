@@ -1,4 +1,4 @@
-# smiley-caret
+# [smiley-caret](https://github.com/macedot/smiley-caret)
 Chrome Extension for turning emoticons :) into emoji 🙂
 
 ## Development

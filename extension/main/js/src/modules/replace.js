@@ -19,7 +19,9 @@ module.exports = function (emoji) {
         }
 
         Utils.searchSelection(search, function (result) {
-            var range = result.selection.getRangeAt(result.selection.rangeCount - 1);
+            // Create a fresh range on the known node/indices for reliability,
+            // especially at start of line/node (startIndex==0) or complex ce structures.
+            var range = document.createRange();
             range.setStart(result.node, result.start);
             range.setEnd(result.node, result.end);
 
@@ -32,8 +34,12 @@ module.exports = function (emoji) {
                 if (result.node.parentNode) {
                     result.node.parentNode.normalize();
                 }
-                
-                result.selection.collapseToEnd();
+
+                // Place caret after the inserted emoji
+                range.setStartAfter(range.endContainer);
+                range.collapse(true);
+                result.selection.removeAllRanges();
+                result.selection.addRange(range);
             }
         });
     } else {

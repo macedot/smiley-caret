@@ -7,7 +7,7 @@ var EntitiesFuse = new Fuse(ENTITIES, {
     location: 0,
     distance: 100,
     minMatchCharLength: 1,
-    keys: [1, 2]
+    keys: ['1']   // search the name/slug field (index 1 in [emoji, slug] arrays)
 });
 
 // --- Message handling (single listener) ---
@@ -36,33 +36,33 @@ chrome.runtime.onMessage.addListener(function (request, sender, respond) {
 });
 
 // --- Action (toolbar icon) click toggles global active state ---
-chrome.action.onClicked.addListener(function () {
-    chrome.storage.local.get({ active: true }, function (data) {
-        var newActiveState = !(data.active !== false);
+chrome.action.onClicked.addListener(async () => {
+    const { active = true } = await chrome.storage.local.get({ active: true });
+    const newActiveState = !active;
 
-        chrome.storage.local.set({ active: newActiveState }, function () {
-            updateExtensionIcon();
-            // Content scripts react via chrome.storage.onChanged (or re-get on focus)
-            // No tabs.query broadcast to avoid needing "tabs" permission.
-        });
-    });
+    await chrome.storage.local.set({ active: newActiveState });
+    await updateExtensionIcon();
 });
 
-function updateExtensionIcon() {
-    chrome.storage.local.get({ active: true }, function (data) {
-        var active = (data.active !== false);
-        chrome.action.setIcon({
-            path: active ? "img/icon-16.png" : "img/icon-16-inactive.png"
+async function updateExtensionIcon() {
+    try {
+        const { active = true } = await chrome.storage.local.get({ active: true });
+        const iconPath = active !== false ? "img/icon-16.png" : "img/icon-16-inactive.png";
+        // Use getURL() to get an absolute chrome-extension:// URL.
+        // Relative paths can fail with "Failed to fetch" when called from a service worker
+        // because the SW's own script URL affects resolution for some resource loads.
+        await chrome.action.setIcon({
+            path: chrome.runtime.getURL(iconPath)
         });
-    });
+    } catch (err) {
+        console.error("Failed to update extension icon:", err);
+    }
 }
 
 // Set icon on SW wake / startup
 updateExtensionIcon();
 
 // React to external storage changes (e.g. options or future UI) to keep icon in sync
-chrome.storage.onChanged.addListener(function (changes, area) {
-    if (area === "local" && changes.active) {
-        updateExtensionIcon();
-    }
+chrome.storage.onChanged.addListener(() => {
+    updateExtensionIcon();
 });

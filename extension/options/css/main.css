@@ -28,11 +28,20 @@ header {
     display: flex;
     align-items: center;
     margin: 15px 0; }
+  header .title-wrapper {
+    display: flex;
+    flex-direction: column; }
   header .title {
-    display: inline-block;
     margin: 0;
     margin-left: 5px;
-    font-size: 22px; }
+    font-size: 22px;
+    line-height: 1; }
+  header .subtitle {
+    margin: 0;
+    margin-left: 5px;
+    font-size: 11px;
+    opacity: 0.6;
+    line-height: 1; }
 
 .js-shortcodes {
   display: flex;

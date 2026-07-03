@@ -11,6 +11,8 @@
     "128": "img/icon-128.png"
   },
 
+  "homepage_url": "https://github.com/macedot/smiley-caret",
+
   "action": {
     "default_title": "Toggle Smiley Caret (text → emoji)",
     "default_icon": {
@@ -44,7 +46,10 @@
     }
   ],
 
-  "options_page": "options/index.html",
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": true
+  },
 
   "minimum_chrome_version": "88"
 }

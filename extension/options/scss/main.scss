@@ -43,12 +43,25 @@ header {
         margin: 15px 0;
     }
 
-        .title {
-            display: inline-block;
-            margin: 0;
-            margin-left: 5px;
-            font-size: 22px;
-        }
+    .title-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .title {
+        margin: 0;
+        margin-left: 5px;
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .subtitle {
+        margin: 0;
+        margin-left: 5px;
+        font-size: 11px;
+        opacity: 0.6;
+        line-height: 1;
+    }
 }
 
 .js-shortcodes {

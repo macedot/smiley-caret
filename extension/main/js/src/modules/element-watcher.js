@@ -41,6 +41,7 @@ function Element(domElement) {
 };
 
 var ElementWatcher = (function () {
+    var exports = {};
     var _currentElem = null;
     var domEmitter = EventEmitter();
 

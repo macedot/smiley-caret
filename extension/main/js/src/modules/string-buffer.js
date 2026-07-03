@@ -37,9 +37,11 @@ module.exports = (function () {
         if (event.isComposing) return;
 
         change(function (buffer) {
-            // Use event.key for the character; ignore space here (handled in keydown)
-            if (event.key !== ' ') {
-                return buffer + event.key;
+            // Use event.key for the character; ignore space (and other non-char like Enter from keypress)
+            // here (handled in keydown for break). Only append actual single-char input.
+            const k = event.key;
+            if (k.length === 1 && k !== ' ') {
+                return buffer + k;
             } else {
                 return buffer;
             }
@@ -58,8 +60,13 @@ module.exports = (function () {
             return;
         }
 
-        // Clear on arrow keys or when selection is not collapsed (e.g. ctrl+A)
-        if (Keys.isArrowKey(which) || key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || !(window.getSelection().isCollapsed)) {
+        // Clear on arrow keys (and other navigation). 
+        // We intentionally do not clear on "not collapsed" here to avoid false positives
+        // at the start of a field (where window.getSelection().isCollapsed can be unreliable
+        // in contenteditable or empty inputs), which was causing the buffer to lose chars
+        // for the very first shortcode on the line.
+        // Selection changes are handled by other events (click, arrows, blur, etc.).
+        if (Keys.isArrowKey(which) || key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown') {
             exports.clear();
             return;
         }
