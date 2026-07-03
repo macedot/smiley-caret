@@ -14,6 +14,7 @@ module.exports = function (emoji) {
 
     if (element.hasAttribute("contenteditable")) {
         if (copyBehavior) {
+            // Fire-and-forget; Clipboard API is async but we do not block selection logic.
             Utils.clipWithSelection(emoji);
         }
 
@@ -22,8 +23,8 @@ module.exports = function (emoji) {
             range.setStart(result.node, result.start);
             range.setEnd(result.node, result.end);
 
-            // If the behavior is copy, it should only select the match. If
-            // it’s not - it should also replace it with the emoji.
+            // If the behavior is copy, it should only select the match (user pastes manually).
+            // Otherwise replace with the emoji.
             if (!copyBehavior) {
                 range.deleteContents();
                 range.insertNode(document.createTextNode(emoji));
@@ -38,11 +39,8 @@ module.exports = function (emoji) {
     } else {
         Utils.searchInput(element, search, function (result) {
             if (copyBehavior) {
-                // clipWithSelection() removes the caret position, so it must
-                // be done after the start and end of the match is found, I.E.
-                // in the callback.
                 Utils.clipWithSelection(emoji);
-
+                // Restore selection to the matched text (user will paste).
                 element.selectionStart = result.start;
                 element.selectionEnd = result.end;
             } else {

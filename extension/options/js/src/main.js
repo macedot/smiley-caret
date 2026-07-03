@@ -1,6 +1,5 @@
 var $ = require('jquery');
-var twemoji = require('twemoji');
-var shortcodes = require('smiley-caret-data/shortcodes');
+var shortcodes = require('../../../../data/emoji-shortcodes.js');
 
 (function () {
     var $container = $(".js-shortcodes");
@@ -12,7 +11,8 @@ var shortcodes = require('smiley-caret-data/shortcodes');
         ,   $codeIcon = $('<i></i>');
 
         $codeText.text(k);
-        $codeIcon.html(twemoji.parse(shortcodes[k]));
+        // Use native unicode emoji directly (no Twemoji)
+        $codeIcon.text(shortcodes[k]);
 
         $code.append($codeText, $codeIcon);
         $col.append($code);

@@ -1,70 +1,68 @@
-var ENTITIES = require('smiley-caret-data/entities');
-var Fuse = require('fuse.js'); // .js is in the package name
+var ENTITIES = require('../../../../data/emoji-entities.js');
+var Fuse = require('fuse.js');
 
 var EntitiesFuse = new Fuse(ENTITIES, {
     shouldSort: true,
     threshold: 0.3,
     location: 0,
     distance: 100,
-    maxPatternLength: 32,
     minMatchCharLength: 1,
     keys: [1, 2]
 });
 
+// --- Message handling (single listener) ---
 chrome.runtime.onMessage.addListener(function (request, sender, respond) {
-    if (request.id !== "get_coloncode_emoji") return;
-
-    var emoji = null;
-
-    for (var i = 0; i < ENTITIES.length; i++) {
-        if (ENTITIES[i][1] === request.coloncode) {
-            emoji = ENTITIES[i][0];
-            break;
+    if (request.id === "get_coloncode_emoji") {
+        var emoji = null;
+        for (var i = 0; i < ENTITIES.length; i++) {
+            if (ENTITIES[i][1] === request.coloncode) {
+                emoji = ENTITIES[i][0];
+                break;
+            }
         }
+        respond(emoji);
+        return true; // keep channel open if needed (sync response here)
     }
 
-    respond(emoji);
+    if (request.id === "get_coloncodes") {
+        var result = EntitiesFuse.search(request.search);
+        // Normalize fuse v3+ result shape: [{item}, ...] -> raw items for callers
+        var items = (result && result[0] && result[0].item)
+            ? result.map(function (r) { return r.item; })
+            : result;
+        respond(items);
+        return true;
+    }
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, respond) {
-    if (request.id !== "get_coloncodes") return;
+// --- Action (toolbar icon) click toggles global active state ---
+chrome.action.onClicked.addListener(function () {
+    chrome.storage.local.get({ active: true }, function (data) {
+        var newActiveState = !(data.active !== false);
 
-    var result = EntitiesFuse.search(request.search);
-    respond(result);
-});
-
-chrome.browserAction.onClicked.addListener(function (tab) {
-    chrome.storage.local.get("active", function (data) {
-        var isActive = (data.active !== false)
-        ,   newActiveState = !isActive;
-
-        chrome.storage.local.set({
-            active: newActiveState
-        }, function () {
-            chrome.tabs.query({}, function (tabs) {
-                for (var i = 0; i < tabs.length; i++) {
-                    chrome.tabs.sendMessage(tabs[i].id, {
-                        id: "update_behavior",
-                        data: {
-                            active: newActiveState
-                        }
-                    });
-                }
-            });
-
+        chrome.storage.local.set({ active: newActiveState }, function () {
             updateExtensionIcon();
+            // Content scripts react via chrome.storage.onChanged (or re-get on focus)
+            // No tabs.query broadcast to avoid needing "tabs" permission.
         });
-    });  
+    });
 });
 
 function updateExtensionIcon() {
-    chrome.storage.local.get("active", function (data) {
-        chrome.browserAction.setIcon({
-            path: (data.active !== false)
-                ? "img/icon-16.png"
-                : "img/icon-16-inactive.png"
+    chrome.storage.local.get({ active: true }, function (data) {
+        var active = (data.active !== false);
+        chrome.action.setIcon({
+            path: active ? "img/icon-16.png" : "img/icon-16-inactive.png"
         });
     });
 }
 
+// Set icon on SW wake / startup
 updateExtensionIcon();
+
+// React to external storage changes (e.g. options or future UI) to keep icon in sync
+chrome.storage.onChanged.addListener(function (changes, area) {
+    if (area === "local" && changes.active) {
+        updateExtensionIcon();
+    }
+});

@@ -140,43 +140,49 @@ module.exports = {
         return offset;
     },
 
-    clipWithInput: function (text) {
-        var input = document.createElement("input");
-        document.body.appendChild(input);
-
-        input.addEventListener("focus", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-
-        input.value = text;
-        input.select();
-
-        document.execCommand("copy");
-        document.body.removeChild(input);
+    // Modern Clipboard API replacement for execCommand (MV3 best practice).
+    // Must be called in a user gesture context.
+    clipWithInput: async function (text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (e) {
+            // Fallback (rare): create temp input (less reliable without focus)
+            var input = document.createElement("input");
+            document.body.appendChild(input);
+            input.value = text;
+            input.select();
+            document.execCommand("copy"); // legacy fallback only
+            document.body.removeChild(input);
+        }
     },
 
-    clipWithSelection: function (text) {
-        var node = document.createTextNode(text),
-            selection = window.getSelection(),
-            range = document.createRange(),
-            clone = null;
+    clipWithSelection: async function (text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            // Selection restore not strictly needed for plain emoji copy; keep simple.
+        } catch (e) {
+            // Legacy fallback (selection dance)
+            var node = document.createTextNode(text),
+                selection = window.getSelection(),
+                range = document.createRange(),
+                clone = null;
 
-        if (selection.rangeCount > 0) {
-            clone = selection.getRangeAt(selection.rangeCount - 1).cloneRange();
-        }
+            if (selection.rangeCount > 0) {
+                clone = selection.getRangeAt(selection.rangeCount - 1).cloneRange();
+            }
 
-        document.body.appendChild(node);
-        selection.removeAllRanges();
-        range.selectNodeContents(node);
-        selection.addRange(range);
-        document.execCommand("copy");
+            document.body.appendChild(node);
+            selection.removeAllRanges();
+            range.selectNodeContents(node);
+            selection.addRange(range);
+            document.execCommand("copy");
 
-        selection.removeAllRanges();
-        document.body.removeChild(node);
+            selection.removeAllRanges();
+            document.body.removeChild(node);
 
-        if (clone !== null) {
-            selection.addRange(clone);
+            if (clone !== null) {
+                selection.addRange(clone);
+            }
         }
     }
 };

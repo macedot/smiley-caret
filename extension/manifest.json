@@ -1,7 +1,7 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Smiley Caret: Text to Emoji",
-  "version": "1.1.1",
+  "version": "2.0.0",
 
   "author": "Hristiyan Dodov",
   "description": "Turns emoticons :) to emoji 🙂 and provides lookup directly in the input field you’re typing in.",
@@ -11,17 +11,14 @@
     "128": "img/icon-128.png"
   },
 
-  "browser_action": {},
+  "action": {},
 
   "permissions": [
-    "storage",
-    "https://twemoji.maxcdn.com/"
+    "storage"
   ],
 
   "background": {
-    "scripts": [
-      "main/js/event.js"
-    ]
+    "service_worker": "main/js/event.js"
   },
 
   "content_scripts": [
@@ -42,5 +39,7 @@
     }
   ],
 
-  "options_page": "options/index.html"
+  "options_page": "options/index.html",
+
+  "minimum_chrome_version": "88"
 }

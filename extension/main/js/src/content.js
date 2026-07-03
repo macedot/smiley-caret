@@ -9,7 +9,7 @@ var ElementWatcher = require('./modules/element-watcher.js');
 var StringBuffer = require('./modules/string-buffer.js');
 var Matcher = require('./modules/matcher.js');
 var replace = require('./modules/replace.js');
-var State = require('./modules/State.js');
+var State = require('./modules/state.js');
 
 FocusWatcher.on('change', function (element) {
     if (Utils.isElementEmojiEligible(element)) {

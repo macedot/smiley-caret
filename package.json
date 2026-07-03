@@ -4,28 +4,20 @@
   "description": "Emoji.",
   "main": "main.js",
   "scripts": {
+    "build": "npm run build:extension && npm run build:options",
+    "build:extension": "esbuild extension/main/js/src/content.js --bundle --format=iife --minify --sourcemap --outfile=extension/main/js/content.js --platform=browser && esbuild extension/main/js/src/event.js --bundle --format=iife --minify --sourcemap --outfile=extension/main/js/event.js --platform=browser",
+    "build:options": "esbuild extension/options/js/src/main.js --bundle --format=iife --minify --sourcemap --outfile=extension/options/js/main.js --platform=browser",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Hristiyan Dodov",
   "license": "ISC",
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-if": "^2.0.2",
-    "gulp-uglify": "^3.0.0",
-    "gulp-useref": "^3.1.2"
+    "esbuild": "^0.25.0"
   },
   "dependencies": {
-    "browserify": "^15.2.0",
     "event-emitter": "^0.3.5",
-    "fuse.js": "^3.2.0",
-    "gulp-buffer": "0.0.2",
-    "gulp-sass": "^3.1.0",
-    "gulp-sourcemaps": "^2.6.4",
-    "gulp-tap": "^1.0.1",
-    "jquery": "^3.2.1",
-    "textarea-caret": "^3.0.2",
-    "textarea-caret-position": "^0.1.1",
-    "twemoji": "^2.5.0",
-    "unicode-emoji-parser": "^1.0.0"
+    "fuse.js": "^7.1.0",
+    "jquery": "^3.7.1",
+    "textarea-caret": "^3.0.2"
   }
 }

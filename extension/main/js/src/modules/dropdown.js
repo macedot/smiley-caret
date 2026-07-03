@@ -1,7 +1,6 @@
 var EventEmitter = require('event-emitter');
-var Twemoji = require('twemoji');
 var Utils = require('./utils.js');
-var State = require('./State.js');
+var State = require('./state.js');
 
 function Dropdown(parent) {
     this.items = {};
@@ -27,26 +26,11 @@ function Dropdown(parent) {
         var item = document.createElement("div");
         var emojiElem = document.createElement("span");
         var emojiElemChar = document.createElement("i");
-        var emojiElemImg = document.createElement("img");
         var nameElem = document.createElement("p");
 
-        emojiElemChar.appendChild(document.createTextNode(emoji));
+        // Native unicode emoji (Twemoji removed for MV3 compliance, simplicity, no remote assets)
+        emojiElemChar.textContent = emoji;
         emojiElem.appendChild(emojiElemChar);
-        emojiElem.appendChild(emojiElemImg);
-
-        var imageMarkup = Twemoji.parse(emoji)
-        ,   imageSrcMatch = /src\=\"(.*)\"/.exec(imageMarkup)
-        ,   imageSrc = (imageSrcMatch && imageSrcMatch[1]);
-        
-        if (imageSrc) {
-            var tempImage = new Image();
-            tempImage.onload = function () {
-                emojiElem.classList.add("is-loaded");
-            };
-
-            tempImage.src = imageSrc;
-            emojiElemImg.src = imageSrc;
-        }
 
         item.appendChild(emojiElem);
 

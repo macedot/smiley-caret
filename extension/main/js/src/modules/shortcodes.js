@@ -1,4 +1,4 @@
-var Shortcodes = require('smiley-caret-data/shortcodes');
+var Shortcodes = require('../../../../../data/emoji-shortcodes.js');
 
 module.exports = (function () {
     var exports = {};

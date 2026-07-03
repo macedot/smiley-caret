@@ -50,3 +50,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, respond) {
         module.exports.setBehavior(request.data);
     }
 });
+
+// React to storage changes (MV3-friendly way to receive global toggle without tabs permission)
+chrome.storage.onChanged.addListener(function (changes, area) {
+    if (area === "local" && changes.active) {
+        module.exports.setBehavior({ active: !!changes.active.newValue });
+    }
+});
