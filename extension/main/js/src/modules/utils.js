@@ -11,15 +11,27 @@ module.exports = {
         }
 
         var value = elem.value
-        ,   endIndex = elem.selectionEnd
-        ,   len = search.length
-        ,   startIndex = Math.max(0, endIndex - len);
+        ,   endIndex = elem.selectionEnd;
 
-        // Always replace the preceding N chars based on the buffer. No strict match check.
-        // This ensures it works even when the shortcode is the very first thing (startIndex=0).
+        var pre = value.substring(0, endIndex);
+
+        // Tolerant match for the same reasons as searchSelection (some fields/editors
+        // may have trailing markers). For plain inputs this is usually not needed,
+        // but keeps behavior consistent.
+        let idx = pre.lastIndexOf(search);
+        if (idx === -1) {
+            return false;
+        }
+        const after = pre.substring(idx + search.length);
+        if (!/^[\u200B\uFEFF\u00A0\u2028\u2029\s]*$/.test(after)) {
+            return false;
+        }
+
+        var startIndex = idx;
+
         return callback({
             start: startIndex,
-            end: endIndex,
+            end: idx + search.length,
             before: value.substring(0, startIndex),
             after: value.substring(endIndex)
         });
@@ -28,31 +40,63 @@ module.exports = {
     searchSelection: function (search, callback) {
         var selection = window.getSelection();
 
-        if (
-            !selection ||
-            !selection.focusNode ||
-            !selection.focusNode.nodeValue
-        ) {
+        if (!selection || !selection.focusNode) {
             return false;
         }
 
-        var node = selection.focusNode
-        ,   endIndex = selection.focusOffset;
+        let node = selection.focusNode;
+        let offset = selection.focusOffset;
 
-        if (!node || !node.nodeValue || selection.rangeCount == 0) {
+        // At the very beginning of a contenteditable (or start of a new line/block)
+        // the selection often reports the container element (or a <br>) instead of
+        // a text node. Resolve to a real text node so we can look for the typed
+        // shortcode.
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            // Prefer the child at/near the offset, or the previous one.
+            let c = node.childNodes[offset] || node.childNodes[offset - 1];
+            if (c && c.nodeType === Node.TEXT_NODE) {
+                node = c;
+                offset = (offset < node.childNodes.length ? 0 : c.nodeValue.length);
+            } else {
+                node = findFirstTextNode(node) || node;
+                offset = (node.nodeValue ? Math.min(offset, node.nodeValue.length) : 0);
+            }
+        }
+
+        if (!node || node.nodeType !== Node.TEXT_NODE || !node.nodeValue) {
             return false;
         }
 
-        var len = search.length;
-        var startIndex = Math.max(0, endIndex - len);
+        if (selection.rangeCount === 0) {
+            return false;
+        }
 
-        // Always replace the preceding N chars in the current text node based on the buffer.
-        // This fixes cases where the shortcode is the very first thing on the line (start of text node).
+        const pre = node.nodeValue.substring(0, offset);
+
+        // Use lastIndexOf + tolerant trailing chars. Some editors (WhatsApp, Lexical-based,
+        // etc.) insert zero-width or other formatting chars ( \u200B, \uFEFF, &nbsp; etc.)
+        // at the end of a text run, especially at the beginning of a new block/string.
+        // Strict .endsWith(search) would fail, but the shortcode is still the "logical"
+        // thing just typed.
+        let idx = pre.lastIndexOf(search);
+        if (idx === -1) {
+            return false;
+        }
+
+        const after = pre.substring(idx + search.length);
+        // Allow only "ignorable" trailing characters that editors use for caret management.
+        if (!/^[\u200B\uFEFF\u00A0\u2028\u2029\s]*$/.test(after)) {
+            return false;
+        }
+
+        const startIndex = idx;
+
+        // The search string ends immediately before the caret (ignoring trailing markers).
         return callback({
             selection: selection,
             node: node,
             start: startIndex,
-            end: endIndex
+            end: idx + search.length
         });
     },
 
@@ -185,3 +229,16 @@ module.exports = {
         }
     }
 };
+
+// Helper used by searchSelection to resolve a container element selection
+// (very common at the absolute start of a contenteditable or new line)
+// into a real text node so we can search for the just-typed shortcode.
+function findFirstTextNode(el) {
+    if (!el) return null;
+    if (el.nodeType === Node.TEXT_NODE) return el;
+    for (let i = 0; i < el.childNodes.length; i++) {
+        const found = findFirstTextNode(el.childNodes[i]);
+        if (found) return found;
+    }
+    return null;
+}

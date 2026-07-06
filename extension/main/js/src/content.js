@@ -11,6 +11,17 @@ var Matcher = require('./modules/matcher.js');
 var replace = require('./modules/replace.js');
 var State = require('./modules/state.js');
 
+// Cheap safety net for the "very first" focus + type case in some editors/CEs.
+// If the element watcher hasn't attached yet when the first key arrives,
+// try to attach to the current activeElement.
+function ensureElementIfNeeded() {
+    if (ElementWatcher.getElement()) return;
+    var active = document.activeElement;
+    if (active && Utils.isElementEmojiEligible(active)) {
+        ElementWatcher.changeElement(active);
+    }
+}
+
 FocusWatcher.on('change', function (element) {
     if (Utils.isElementEmojiEligible(element)) {
         ElementWatcher.changeElement(element);
@@ -20,9 +31,13 @@ FocusWatcher.on('change', function (element) {
 });
 
 ElementWatcher.on('rebind', StringBuffer.clear);
-ElementWatcher.element.on('keydown', StringBuffer.handleKeyDown);
+ElementWatcher.element.on('keydown', function (event) {
+    ensureElementIfNeeded();
+    StringBuffer.handleKeyDown(event);
+});
 
 ElementWatcher.element.on('keypress', function (event) {
+    ensureElementIfNeeded();
     StringBuffer.handleKeyPress(event);
 
     // Use rAF for better timing of DOM read (caret position) after char insertion

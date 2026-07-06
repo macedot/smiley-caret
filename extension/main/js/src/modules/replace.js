@@ -19,11 +19,21 @@ module.exports = function (emoji) {
         }
 
         Utils.searchSelection(search, function (result) {
-            // Backstop: the buffer is the source of truth, but if it ever desyncs
-            // from the DOM (split nodes, normalize races, etc.), don't clobber
-            // unrelated text. Bail silently instead.
-            var slice = result.node.nodeValue.substring(result.start, result.end);
-            if (slice !== search) return;
+            // Backstop: the buffer is the source of truth.
+            // Use tolerant match to handle editors (WhatsApp etc.) that insert
+            // zero-width chars or normalize around the typed sequence.
+            var text = result.node.nodeValue;
+            var slice = text.substring(result.start, result.end);
+            if (slice !== search) {
+                // tolerant: does the range contain or end with the search?
+                var idx = text.lastIndexOf(search, result.end);
+                if (idx === -1 || idx + search.length > result.end) return;
+                // adjust to the actual location found
+                result.start = idx;
+                result.end = idx + search.length;
+                slice = text.substring(result.start, result.end);
+                if (slice !== search) return;
+            }
 
             // Create a fresh range on the known node/indices for reliability,
             // especially at start of line/node (startIndex==0) or complex ce structures.
@@ -59,7 +69,17 @@ module.exports = function (emoji) {
                 element.selectionEnd = result.end;
             } else {
                 // Backstop: bail if the buffer desyncs from the field value.
-                if (element.value.substring(result.start, result.end) !== search) return;
+                // Tolerant version for fields that may have weird trailing chars.
+                var val = element.value;
+                var actual = val.substring(result.start, result.end);
+                if (actual !== search) {
+                    var idx = val.lastIndexOf(search, result.end);
+                    if (idx === -1 || idx + search.length > result.end) return;
+                    result.start = idx;
+                    result.end = idx + search.length;
+                    actual = val.substring(result.start, result.end);
+                    if (actual !== search) return;
+                }
 
                 element.value = result.before + emoji + result.after;
                 var caret = result.before.length + emoji.length;
